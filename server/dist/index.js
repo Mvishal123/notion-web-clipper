@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv").config({ path: "../.env" });
 const express_1 = __importDefault(require("express"));
 const notion_1 = __importDefault(require("./routes/notion"));
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 app.use("/api/v1/notion", notion_1.default);
 const PORT = 3000;
 app.listen(PORT, () => {

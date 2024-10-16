@@ -6,7 +6,7 @@ const notionRouter = Router();
 notionRouter.get("/list", async (req: Request, res: Response) => {
   try {
     const list = await client.databases.query({
-      database_id: "11f3ca336816800d917dc8ac6273f56f",
+      database_id: process.env.NOTION_DATABASE_ID,
     });
 
     const response = Object.entries(list.results).map((item, index) => {
@@ -143,7 +143,10 @@ notionRouter.post("/add", async (req: Request, res: Response) => {
 });
 
 notionRouter.get("/", async (req: Request, res: Response) => {
-  const { url } = req.body;
+  let { url } = req.query;
+  url = decodeURIComponent(url as string);
+  console.log({ url });
+
   try {
     const isPresent = await client.databases.query({
       database_id: process.env.NOTION_DATABASE_ID,

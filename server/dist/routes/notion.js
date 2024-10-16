@@ -15,7 +15,7 @@ const notionRouter = (0, express_1.Router)();
 notionRouter.get("/list", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const list = yield notion_client_1.client.databases.query({
-            database_id: "11f3ca336816800d917dc8ac6273f56f",
+            database_id: process.env.NOTION_DATABASE_ID,
         });
         const response = Object.entries(list.results).map((item, index) => {
             const props = item[1]["properties"];
@@ -86,7 +86,7 @@ notionRouter.put("/delete/:id", (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 }));
 notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c;
     const { title, url } = req.body;
     try {
         const isPresent = yield notion_client_1.client.databases.query({
@@ -98,7 +98,7 @@ notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, functi
                 },
             },
         });
-        if (((_a = isPresent === null || isPresent === void 0 ? void 0 : isPresent.results[0]) === null || _a === void 0 ? void 0 : _a.url) === url) {
+        if (((_c = (_b = (_a = isPresent["results"][0]) === null || _a === void 0 ? void 0 : _a.properties) === null || _b === void 0 ? void 0 : _b["URL"]) === null || _c === void 0 ? void 0 : _c.url) === url) {
             res.status(400).send("URL already exists");
             return;
         }
@@ -144,8 +144,10 @@ notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 }));
 notionRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c, _d;
-    const { url } = req.body;
+    var _d, _e, _f;
+    let { url } = req.query;
+    url = decodeURIComponent(url);
+    console.log({ url });
     try {
         const isPresent = yield notion_client_1.client.databases.query({
             database_id: process.env.NOTION_DATABASE_ID,
@@ -156,7 +158,7 @@ notionRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 },
             },
         });
-        if (((_d = (_c = (_b = isPresent["results"][0]) === null || _b === void 0 ? void 0 : _b.properties) === null || _c === void 0 ? void 0 : _c["URL"]) === null || _d === void 0 ? void 0 : _d.url) === url) {
+        if (((_f = (_e = (_d = isPresent["results"][0]) === null || _d === void 0 ? void 0 : _d.properties) === null || _e === void 0 ? void 0 : _e["URL"]) === null || _f === void 0 ? void 0 : _f.url) === url) {
             res.status(200).json({
                 message: "URL already exists",
                 success: false,
