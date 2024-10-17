@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "Notion clipper",
+  "description": "Custom Clipper for Notion",
+  "icons": {
+    "32": "icons/icon32.png"
+  },
+  "action": {
+    "default_popup": "index.html"
+  },
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": ["scripting", "tabs"]
+}

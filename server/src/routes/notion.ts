@@ -30,30 +30,70 @@ notionRouter.get("/list", async (req: Request, res: Response) => {
 });
 
 notionRouter.put("/update/:id", async (req: Request, res: Response) => {
-  const { status } = req.body;
+  const data = req.body.newData;
   const { id } = req.params;
 
+  console.log({ data });
+
   try {
+    const page = await client.pages.retrieve({
+      page_id: id,
+    });
+    console.log({ page: page["properties"]["Title"].title });
+
+    if (!page) {
+      res.status(404).json({
+        message: "Page not found",
+      });
+      return;
+    }
+
     const response = await client.pages.update({
       page_id: id,
       properties: {
         "Reading status": {
           type: "status",
           status: {
-            name: status,
+            name:
+              data?.status ??
+              page["properties"]["Reading status"]["status"]["name"],
             color:
-              status === "Not started"
+              (data?.status ??
+                page["properties"]["Reading status"]["status"]["name"]) ===
+              "Not started"
                 ? "default"
-                : status === "In progress"
+                : (data?.status ??
+                    page["properties"]["Reading status"]["status"]["name"]) ===
+                  "In progress"
                 ? "blue"
                 : "green",
           },
         },
+        Title: {
+          title: [
+            {
+              text: {
+                content:
+                  data?.title ??
+                  page["properties"]["Title"]["title"][0].text.content,
+              },
+              plain_text:
+                data?.title ??
+                page["properties"]["Title"]["title"][0]["plain_text"],
+            },
+          ],
+        },
       },
     });
 
+    const updatedData = {
+      title: response.properties["Title"].title[0].text.content,
+      url: response.properties["URL"].url,
+      status: response.properties["Reading status"].status.name,
+    };
+
     res.status(200).json({
-      response: response,
+      response: updatedData,
     });
   } catch (error) {
     console.error(error);
@@ -134,7 +174,29 @@ notionRouter.post("/add", async (req: Request, res: Response) => {
     });
 
     res.status(200).json({
-      response: response,
+      id: response.id,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+notionRouter.get("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const page = await client.pages.retrieve({
+      page_id: id,
+    });
+
+    const data = {
+      title: page["properties"]["Title"]["title"][0]["text"]["content"],
+      url: page["properties"]["URL"]["url"],
+      status: page["properties"]["Reading status"]["status"]["name"],
+    };
+    res.status(200).json({
+      data,
     });
   } catch (error) {
     console.error(error);
@@ -162,21 +224,27 @@ notionRouter.get("/", async (req: Request, res: Response) => {
       res.status(200).json({
         message: "URL already exists",
         success: false,
-        present: true,
+        data: {
+          present: true,
+          id: isPresent["results"][0].id,
+        },
       });
       return;
     }
 
     res.status(200).json({
       message: "URL does not exist",
-      success: true,
-      present: false,
+      data: {
+        present: false,
+        id: null,
+        status: null,
+      },
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       message: "Internal Server Error",
-      success: false,
+      data: null,
     });
   }
 });

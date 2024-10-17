@@ -37,27 +37,56 @@ notionRouter.get("/list", (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 }));
 notionRouter.put("/update/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { status } = req.body;
+    var _a, _b, _c, _d, _e;
+    const data = req.body.newData;
     const { id } = req.params;
+    console.log({ data });
     try {
+        const page = yield notion_client_1.client.pages.retrieve({
+            page_id: id,
+        });
+        console.log({ page: page["properties"]["Title"].title });
+        if (!page) {
+            res.status(404).json({
+                message: "Page not found",
+            });
+            return;
+        }
         const response = yield notion_client_1.client.pages.update({
             page_id: id,
             properties: {
                 "Reading status": {
                     type: "status",
                     status: {
-                        name: status,
-                        color: status === "Not started"
+                        name: (_a = data === null || data === void 0 ? void 0 : data.status) !== null && _a !== void 0 ? _a : page["properties"]["Reading status"]["status"]["name"],
+                        color: ((_b = data === null || data === void 0 ? void 0 : data.status) !== null && _b !== void 0 ? _b : page["properties"]["Reading status"]["status"]["name"]) ===
+                            "Not started"
                             ? "default"
-                            : status === "In progress"
+                            : ((_c = data === null || data === void 0 ? void 0 : data.status) !== null && _c !== void 0 ? _c : page["properties"]["Reading status"]["status"]["name"]) ===
+                                "In progress"
                                 ? "blue"
                                 : "green",
                     },
                 },
+                Title: {
+                    title: [
+                        {
+                            text: {
+                                content: (_d = data === null || data === void 0 ? void 0 : data.title) !== null && _d !== void 0 ? _d : page["properties"]["Title"]["title"][0].text.content,
+                            },
+                            plain_text: (_e = data === null || data === void 0 ? void 0 : data.title) !== null && _e !== void 0 ? _e : page["properties"]["Title"]["title"][0]["plain_text"],
+                        },
+                    ],
+                },
             },
         });
+        const updatedData = {
+            title: response.properties["Title"].title[0].text.content,
+            url: response.properties["URL"].url,
+            status: response.properties["Reading status"].status.name,
+        };
         res.status(200).json({
-            response: response,
+            response: updatedData,
         });
     }
     catch (error) {
@@ -86,7 +115,7 @@ notionRouter.put("/delete/:id", (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 }));
 notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _f, _g, _h;
     const { title, url } = req.body;
     try {
         const isPresent = yield notion_client_1.client.databases.query({
@@ -98,7 +127,7 @@ notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, functi
                 },
             },
         });
-        if (((_c = (_b = (_a = isPresent["results"][0]) === null || _a === void 0 ? void 0 : _a.properties) === null || _b === void 0 ? void 0 : _b["URL"]) === null || _c === void 0 ? void 0 : _c.url) === url) {
+        if (((_h = (_g = (_f = isPresent["results"][0]) === null || _f === void 0 ? void 0 : _f.properties) === null || _g === void 0 ? void 0 : _g["URL"]) === null || _h === void 0 ? void 0 : _h.url) === url) {
             res.status(400).send("URL already exists");
             return;
         }
@@ -135,7 +164,27 @@ notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, functi
             },
         });
         res.status(200).json({
-            response: response,
+            id: response.id,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+}));
+notionRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const page = yield notion_client_1.client.pages.retrieve({
+            page_id: id,
+        });
+        const data = {
+            title: page["properties"]["Title"]["title"][0]["text"]["content"],
+            url: page["properties"]["URL"]["url"],
+            status: page["properties"]["Reading status"]["status"]["name"],
+        };
+        res.status(200).json({
+            data,
         });
     }
     catch (error) {
@@ -144,7 +193,7 @@ notionRouter.post("/add", (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 }));
 notionRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d, _e, _f;
+    var _j, _k, _l;
     let { url } = req.query;
     url = decodeURIComponent(url);
     console.log({ url });
@@ -158,25 +207,31 @@ notionRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 },
             },
         });
-        if (((_f = (_e = (_d = isPresent["results"][0]) === null || _d === void 0 ? void 0 : _d.properties) === null || _e === void 0 ? void 0 : _e["URL"]) === null || _f === void 0 ? void 0 : _f.url) === url) {
+        if (((_l = (_k = (_j = isPresent["results"][0]) === null || _j === void 0 ? void 0 : _j.properties) === null || _k === void 0 ? void 0 : _k["URL"]) === null || _l === void 0 ? void 0 : _l.url) === url) {
             res.status(200).json({
                 message: "URL already exists",
                 success: false,
-                present: true,
+                data: {
+                    present: true,
+                    id: isPresent["results"][0].id,
+                },
             });
             return;
         }
         res.status(200).json({
             message: "URL does not exist",
-            success: true,
-            present: false,
+            data: {
+                present: false,
+                id: null,
+                status: null,
+            },
         });
     }
     catch (error) {
         console.error(error);
         res.status(500).json({
             message: "Internal Server Error",
-            success: false,
+            data: null,
         });
     }
 }));
