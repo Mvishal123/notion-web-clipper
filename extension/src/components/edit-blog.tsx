@@ -39,9 +39,7 @@ const EditBlog = () => {
     },
 
     async onSuccess(newData) {
-      await queryClient.setQueryData(["blog", id], (oldData: ItemDataType) => {
-        return { ...oldData, ...newData };
-      });
+      await queryClient.setQueryData(["blog", id], newData);
     },
   });
 

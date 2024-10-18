@@ -18,7 +18,6 @@ const AddBlog = () => {
         title: newTitle,
         url,
       });
-      console.log({ res });
       return res.data;
     },
     onSuccess: (data) => {
@@ -31,13 +30,14 @@ const AddBlog = () => {
         <input
           type="text"
           placeholder="New title"
-          value={title}
+          value={newTitle}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setNewTitle(e.target.value)
           }
           className="h-full p-2 w-full border-none focus:outline-none text-lg font-semibold text-slate-700"
         />
       </div>
+      <div className="text-slate-800 text-sm font-bold mt-2 min-h-12">{newTitle}</div>
       <Button size="sm" className="mt-2" onClick={() => addBlog.mutate()}>
         Save
       </Button>

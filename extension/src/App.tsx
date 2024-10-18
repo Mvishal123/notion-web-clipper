@@ -1,11 +1,11 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Blog from "./components/blog";
-import { buttonVariants } from "./components/ui/button";
+import { Button } from "./components/ui/button";
 
 import "./App.css";
+import AddBlog from "./components/add-blog";
 import EditBlog from "./components/edit-blog";
 import Home from "./components/home";
-import AddBlog from "./components/add-blog";
 
 const App = () => {
   return (
@@ -14,12 +14,15 @@ const App = () => {
         <h1 className="text-lg font-bold text-slate-800">
           Vishal&apos;s clipper
         </h1>
-        <Link
-          className={buttonVariants({ size: "sm", variant: "secondary" })}
-          to="#/home"
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            window.location.hash = "#/home";
+          }}
         >
           Home
-        </Link>
+        </Button>
       </div>
       <Routes>
         <Route index element={<Blog />} />
